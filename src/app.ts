@@ -1,3 +1,42 @@
+// Project state management
+// ! How do we call add project from inside our class down?
+//! And how do we pass that updated list of projects whenever it changes to the project list class?
+class ProjectState {
+  private listeners: any[] = [];
+  private projects: any[] = [];
+  private static instance: ProjectState;
+
+  private constructor() {}
+
+  addListeners(listenerFu: Function) {
+    this.listeners.push(listenerFu);
+  }
+
+  addProject(title: string, description: string, noOfPeople: number) {
+    const newProject = {
+      id: Math.random().toString(),
+      title: title,
+      description: description,
+      people: noOfPeople,
+    };
+    this.projects.push(newProject);
+    for (const listenerFu of this.listeners) {
+      listenerFu(this.projects.slice());
+    }
+  }
+
+  static getInstance() {
+    if (this.instance) {
+      return this.instance;
+    }
+
+    this.instance = new ProjectState();
+    return this.instance;
+  }
+}
+
+const projectState = ProjectState.getInstance();
+
 interface Validateable {
   value: string | number;
   required?: boolean;
@@ -67,6 +106,7 @@ function Autobind(_: any, _2: string, descriptor: PropertyDescriptor) {
 
 // ProjectList Class
 class ProjectList {
+  assignedProjects: any[] = [];
   templateElement: HTMLTemplateElement;
   hostElement: HTMLDivElement;
   element: HTMLElement;
@@ -83,8 +123,24 @@ class ProjectList {
     //  here we select the first element of the template content (form)
     this.element = importNode.firstElementChild as HTMLFormElement;
     this.element.id = `${this.type}-projects`;
+
+    projectState.addListeners((projects: any[]) => {
+      this.assignedProjects = projects;
+      this.renderProjects();
+    });
     this.attach();
     this.renderContent();
+  }
+
+  private renderProjects() {
+    const lisEl = document.getElementById(
+      `${this.type}-projects-list`
+    )! as HTMLUListElement;
+    for (const prjItem of this.assignedProjects) {
+      const lisItem = document.createElement("li");
+      lisItem.textContent = prjItem.title;
+      lisEl.appendChild(lisItem);
+    }
   }
 
   private renderContent() {
@@ -190,6 +246,7 @@ class ProjectInput {
     if (Array.isArray(userInputs)) {
       const [title, des, people] = userInputs;
       console.log(title, des, people);
+      projectState.addProject(title, des, people);
       this.clearInputs();
     }
   }
