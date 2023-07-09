@@ -63,6 +63,44 @@ function Autobind(_: any, _2: string, descriptor: PropertyDescriptor) {
   return adjDescriptor;
 }
 
+//
+
+// ProjectList Class
+class ProjectList {
+  templateElement: HTMLTemplateElement;
+  hostElement: HTMLDivElement;
+  element: HTMLElement;
+  constructor(private type: "active" | "finished") {
+    // here we hold the reference to the template element
+    this.templateElement = <HTMLTemplateElement>(
+      document.getElementById("project-list")!
+    );
+    //  here we hold the reference to the host element
+    this.hostElement = <HTMLDivElement>document.getElementById("app")!;
+
+    //  here we import the template content
+    const importNode = document.importNode(this.templateElement.content, true);
+    //  here we select the first element of the template content (form)
+    this.element = importNode.firstElementChild as HTMLFormElement;
+    this.element.id = `${this.type}-projects`;
+    this.attach();
+    this.renderContent();
+  }
+
+  private renderContent() {
+    let listId = `${this.type}-projects-list`;
+    this.element.querySelector("ul")!.id = listId;
+    this.element.querySelector("h2")!.textContent =
+      this.type.toUpperCase() + " PROJECTS";
+  }
+
+  private attach() {
+    //! here we attach the element (form) to the host element (div with id app)
+    this.hostElement.insertAdjacentElement("beforeend", this.element);
+  }
+}
+
+// ProjectInput Class
 class ProjectInput {
   templateElement: HTMLTemplateElement;
   hostElement: HTMLDivElement;
@@ -168,3 +206,5 @@ class ProjectInput {
 }
 
 const projInput = new ProjectInput();
+const activeProjectList = new ProjectList("active");
+const finishedProjectList = new ProjectList("finished");
